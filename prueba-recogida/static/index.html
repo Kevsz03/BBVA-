@@ -8,36 +8,38 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <aside id="panel">
-    <h1>Punto de encuentro</h1>
-    <p class="lead">
-      El pin es donde estás. El carro va hacia ahí por la calle.
-      Si caminas hasta un punto de su ruta, a veces le ahorras la vuelta.
-    </p>
-    <label for="umbral">Umbral de caminata por la calle</label>
-    <div class="umbral-row">
-      <input id="umbral" type="range" min="50" max="800" step="10" value="250">
-      <output id="umbral-valor">250 m</output>
+  <div class="escenario">
+    <div class="iphone" id="iphone">
+      <span class="boton-lateral volumen"></span>
+      <span class="boton-lateral encendido"></span>
+      <div class="pantalla">
+        <div id="map"></div>
+        <section class="controles" id="controles">
+          <div class="controles-cabeza">
+            <h1>Punto de encuentro</h1>
+            <output id="umbral-valor">250 m</output>
+          </div>
+          <label for="umbral">Umbral de caminata por la calle</label>
+          <input id="umbral" type="range" min="50" max="800" step="10" value="250">
+          <p id="status" class="status quiet">Calculando la ruta por las calles…</p>
+          <p id="nota" class="nota"></p>
+          <div class="botones">
+            <button id="avanzar" type="button">Avanzar el carro</button>
+            <button id="aleatorio" type="button">Nuevo carro al azar</button>
+          </div>
+        </section>
+        <section id="aviso" class="aviso" hidden>
+          <p id="aviso-texto"></p>
+          <div class="aviso-botones">
+            <button id="aceptar" type="button">Aceptar</button>
+            <button id="rechazar" type="button">Rechazar</button>
+          </div>
+        </section>
+      </div>
+      <div class="island" aria-hidden="true"></div>
     </div>
-    <p class="hint">De 50 a 800 metros, medidos por la banqueta, no en línea recta. Al moverlo se recalcula.</p>
-    <p id="status" class="status quiet">Calculando la ruta por las calles…</p>
-    <p id="calles" class="calles"></p>
-    <p id="nota" class="nota"></p>
-    <div class="botones">
-      <button id="avanzar" type="button">Avanzar el carro</button>
-      <button id="aleatorio" type="button">Nuevo carro al azar</button>
-    </div>
-    <p class="hint">Avanzar recorre unos 320 m sobre la ruta actual. Puedes pulsarlo otra vez. El pin no se mueve.</p>
-    <ul class="leyenda">
-      <li><span class="swatch tu"></span> Tú</li>
-      <li><span class="swatch carro"></span> Carro</li>
-      <li><span class="swatch ruta"></span> Ruta en auto</li>
-      <li><span class="swatch pie"></span> Caminata</li>
-    </ul>
-    <p class="credito">Calles y sentidos: OpenStreetMap, motor Valhalla. Sin clave de API.</p>
-  </aside>
-  <div id="map"></div>
+  </div>
   <script src="/static/vendor/leaflet/leaflet.js"></script>
-  <script src="/static/app.js?v=2"></script>
+  <script src="/static/app.js?v=3"></script>
 </body>
 </html>
