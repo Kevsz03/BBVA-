@@ -36,12 +36,12 @@ STEP_M = 320
 CAR_RADIUS_M = 2000
 CAR_MIN_M = 350
 
-# Primer plano: Insurgentes Sur (avenida de doble cuerpo) en Nápoles /
-# Del Valle. El carro entra a Insurgentes, pasa cerca y luego da la vuelta
-# por calles de un sentido para llegar al pin, al poniente de la avenida.
+# Primer plano: Insurgentes Sur, en Nápoles. El carro viene más al norte,
+# por Patricio Sanz e Insurgentes, así tarda más en llegar al punto que la
+# caminata. El pin sigue al poniente de la avenida.
 PRESET_USER = {"lat": 19.39146, "lon": -99.17421}
-PRESET_CAR = {"lat": 19.38926, "lon": -99.17296}
-MAP_CENTER = {"lat": 19.3910, "lon": -99.1735, "zoom": 16}
+PRESET_CAR = {"lat": 19.39921, "lon": -99.16876}
+MAP_CENTER = {"lat": 19.3953, "lon": -99.1715, "zoom": 15}
 
 _lock = threading.Lock()
 _analysis_cache: dict[tuple, dict[str, Any]] = {}
@@ -412,12 +412,11 @@ def rough_meters(distance_m: float) -> int:
     return meters
 
 
-def _popup_text(savings_s: float, walk_m: float, walk_s: float) -> str:
+def _popup_text(savings_s: float, walk_m: float, _walk_s: float) -> str:
     return (
         "Detectamos que si te mueves a este punto puedes ahorrarte "
         f"{format_duration(savings_s)}. "
-        f"Caminarías unos {rough_meters(walk_m)} metros, "
-        f"cerca de {format_duration(walk_s)}."
+        f"Caminarías unos {rough_meters(walk_m)} metros."
     )
 
 

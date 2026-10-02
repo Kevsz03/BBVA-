@@ -14,7 +14,7 @@ python app.py
 
 Abre [http://127.0.0.1:8765](http://127.0.0.1:8765).
 
-Al entrar, el mapa se ve dentro de un marco de iPhone y se centra en **Avenida Insurgentes Sur** (Nápoles / Del Valle, Ciudad de México), con un pin y un carro ya puestos. En ese caso el carro toma Insurgentes y después tiene que rodear por calles de un sentido para llegar al pin. Con el umbral de fábrica (250 m) primero se ve el mapa con el pin y el carro, luego un radar sobre el pin, y después el aviso ocupa la pantalla del teléfono: el ahorro, la caminata, y los botones **Aceptar** y **Rechazar**. Aceptar deja marcado el punto y la caminata. Rechazar cierra el aviso y el pin no se mueve.
+Al entrar, el mapa se ve dentro de un marco de iPhone y se centra en **Avenida Insurgentes Sur** (Nápoles / Del Valle, Ciudad de México), con un pin y un carro ya puestos. En ese caso el carro toma Insurgentes y después tiene que rodear por calles de un sentido para llegar al pin. Con el umbral de fábrica (250 m) primero se ve el mapa con el pin y el carro, luego un radar sobre el pin, y después el aviso ocupa la pantalla del teléfono: el tiempo que ahorras en la recogida, los metros de caminata (sin el tiempo a pie) y los botones **Aceptar** y **Rechazar**. Aceptar deja marcado el punto y la caminata. Rechazar cierra el aviso y el pin no se mueve.
 
 ## Qué hace el deslizador
 
