@@ -14,6 +14,7 @@ STATIC = BASE / "static"
 
 app = Flask(__name__, static_folder=str(STATIC))
 app.json.ensure_ascii = False
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
 
 def _json(payload: dict, status: int = 200):

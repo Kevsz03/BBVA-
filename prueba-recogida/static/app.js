@@ -1,9 +1,8 @@
 const map = L.map("map", { zoomControl: true }).setView([19.391, -99.1735], 16);
 
-L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO',
-  subdomains: "abcd",
-  maxZoom: 20,
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom: 19,
 }).addTo(map);
 
 const umbral = document.getElementById("umbral");
