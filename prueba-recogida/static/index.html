@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Punto de encuentro</title>
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="escenario">
+    <div class="iphone" id="iphone">
+      <span class="boton-lateral volumen"></span>
+      <span class="boton-lateral encendido"></span>
+      <div class="pantalla">
+        <div id="map"></div>
+        <section class="controles" id="controles">
+          <div class="controles-cabeza">
+            <h1>Punto de encuentro</h1>
+            <output id="umbral-valor">250 m</output>
+          </div>
+          <label for="umbral">Umbral de caminata por la calle</label>
+          <input id="umbral" type="range" min="50" max="800" step="10" value="250">
+          <p id="status" class="status quiet">Calculando la ruta por las calles…</p>
+          <p id="nota" class="nota"></p>
+          <div class="botones">
+            <button id="avanzar" type="button">Avanzar el carro</button>
+            <button id="aleatorio" type="button">Nuevo carro al azar</button>
+          </div>
+        </section>
+        <section id="aviso" class="aviso" hidden>
+          <p id="aviso-texto"></p>
+          <div class="aviso-botones">
+            <button id="aceptar" type="button">Aceptar</button>
+            <button id="rechazar" type="button">Rechazar</button>
+          </div>
+        </section>
+      </div>
+      <div class="island" aria-hidden="true"></div>
+    </div>
+  </div>
+  <script src="/static/vendor/leaflet/leaflet.js"></script>
+  <script src="/static/app.js?v=4"></script>
+</body>
+</html>
