@@ -1,3 +1,6 @@
+const MAPA_MS = 6000;
+const RADAR_MS = 5000;
+
 const map = L.map("map", { zoomControl: true }).setView([19.391, -99.1735], 16);
 
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -15,6 +18,7 @@ const aviso = document.getElementById("aviso");
 const avisoTexto = document.getElementById("aviso-texto");
 const aceptarBtn = document.getElementById("aceptar");
 const rechazarBtn = document.getElementById("rechazar");
+const controles = document.getElementById("controles");
 
 const capas = L.layerGroup().addTo(map);
 let usuario = null;
@@ -25,13 +29,24 @@ let timer = null;
 let firmaAviso = "";
 let decision = null;
 let ultimo = null;
+let radar = null;
+let secuencia = [];
 
 function icono(clase) {
   return L.divIcon({
     className: "",
     html: `<div class="marca ${clase}"></div>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+}
+
+function iconoRadar() {
+  return L.divIcon({
+    className: "radar-icono",
+    html: '<div class="radar" aria-hidden="true"><i></i><i></i><i></i></div>',
+    iconSize: [200, 200],
+    iconAnchor: [100, 100],
   });
 }
 
@@ -58,15 +73,68 @@ function firmaDe(datos) {
   ].join("|");
 }
 
+function limpiarSecuencia() {
+  secuencia.forEach((id) => clearTimeout(id));
+  secuencia = [];
+  quitarRadar();
+}
+
+function quitarRadar() {
+  if (radar) {
+    map.removeLayer(radar);
+    radar = null;
+  }
+}
+
+function mostrarRadar() {
+  if (!usuario || radar) return;
+  radar = L.marker([usuario.lat, usuario.lon], {
+    icon: iconoRadar(),
+    interactive: false,
+    zIndexOffset: 350,
+  }).addTo(map);
+}
+
 function cerrarAviso() {
   aviso.hidden = true;
 }
 
 function mensajeError(texto) {
+  limpiarSecuencia();
   cerrarAviso();
+  controles.hidden = false;
   statusEl.className = "status error";
   statusEl.textContent = texto;
   notaEl.textContent = "";
+}
+
+function encuadrar(puntos, conControles) {
+  const grupo = L.latLngBounds(puntos[0], puntos[0]);
+  puntos.slice(1).forEach((punto) => grupo.extend(punto));
+  const abajo = conControles ? 220 : 90;
+  map.invalidateSize();
+  map.fitBounds(grupo, {
+    paddingTopLeft: [48, 96],
+    paddingBottomRight: [48, abajo],
+    maxZoom: 16,
+    animate: false,
+  });
+}
+
+function programarEntrada() {
+  limpiarSecuencia();
+  controles.hidden = true;
+  cerrarAviso();
+  secuencia.push(setTimeout(() => {
+    if (decision !== null) return;
+    mostrarRadar();
+  }, MAPA_MS));
+  secuencia.push(setTimeout(() => {
+    if (decision !== null || !ultimo || !ultimo.show_popup) return;
+    quitarRadar();
+    avisoTexto.textContent = ultimo.popup;
+    aviso.hidden = false;
+  }, MAPA_MS + RADAR_MS));
 }
 
 async function pedir(opciones) {
@@ -91,7 +159,7 @@ async function pedir(opciones) {
       mensajeError(datos.error || "No se pudo calcular la ruta por la calle.");
       return;
     }
-    aplicar(datos, opciones.encuadrar);
+    aplicar(datos, opciones.encuadrar !== false);
   } catch (error) {
     if (id !== solicitud) return;
     mensajeError("No se pudo hablar con el servidor de rutas.");
@@ -105,7 +173,7 @@ function programar(opciones) {
   timer = setTimeout(() => pedir(opciones), 40);
 }
 
-function aplicar(datos, encuadrar) {
+function aplicar(datos, reencuadrar) {
   usuario = datos.user;
   carro = datos.car;
   ultimo = datos;
@@ -117,57 +185,61 @@ function aplicar(datos, encuadrar) {
   }
 
   const firma = firmaDe(datos);
-  if (firma !== firmaAviso) {
+  const firmaNueva = firma !== firmaAviso;
+  if (firmaNueva) {
     firmaAviso = firma;
     decision = null;
+    limpiarSecuencia();
   }
 
   const hayAviso = Boolean(datos.show_popup && datos.meeting && datos.popup);
-  const mostrarPunto = hayAviso && decision !== "rechazada";
+  const mostrarPunto = hayAviso && decision === "aceptada";
+  const enEntrada = hayAviso && decision === null;
 
   capas.clearLayers();
-  const ruta = L.polyline(datos.drive.geometry, {
+  L.polyline(datos.drive.geometry, {
     color: "#1565c0",
-    weight: 5,
-    opacity: 0.92,
+    weight: 6,
+    opacity: 0.95,
   }).addTo(capas);
 
-  L.marker([datos.user.lat, datos.user.lon], { icon: icono("tu"), zIndexOffset: 400 })
+  L.marker([datos.user.lat, datos.user.lon], { icon: icono("tu"), zIndexOffset: 500 })
     .addTo(capas)
-    .bindTooltip("Tú", { permanent: true, direction: "right", offset: [8, 0] });
+    .bindTooltip("Tú", { permanent: true, direction: "top", offset: [0, -12], className: "etiqueta etiqueta-tu" });
 
-  L.marker([datos.car.lat, datos.car.lon], { icon: icono("carro"), zIndexOffset: 500 })
+  L.marker([datos.car.lat, datos.car.lon], { icon: icono("carro"), zIndexOffset: 520 })
     .addTo(capas)
-    .bindTooltip("Carro", { permanent: true, direction: "left", offset: [-8, 0] });
+    .bindTooltip("Carro", { permanent: true, direction: "top", offset: [0, -12], className: "etiqueta etiqueta-carro" });
 
-  const limites = [ruta.getBounds()];
   if (mostrarPunto) {
-    const caminata = L.polyline(datos.meeting.walk_geometry, {
+    L.polyline(datos.meeting.walk_geometry, {
       color: "#2e7d32",
-      weight: 4,
-      dashArray: "7 7",
+      weight: 5,
+      dashArray: "8 8",
     }).addTo(capas);
-    limites.push(caminata.getBounds());
     L.marker([datos.meeting.lat, datos.meeting.lon], {
       icon: icono("punto"),
-      zIndexOffset: 600,
-    }).addTo(capas);
+      zIndexOffset: 640,
+    }).addTo(capas)
+      .bindTooltip("Punto nuevo", { permanent: true, direction: "top", offset: [0, -12], className: "etiqueta etiqueta-punto" });
   }
 
-  if (hayAviso && decision === null) {
-    avisoTexto.textContent = datos.popup;
-    aviso.hidden = false;
-    statusEl.className = "status aviso";
-    statusEl.textContent = "Hay un punto más corto. Elige si te mueves.";
+  if (enEntrada && firmaNueva) {
+    statusEl.className = "status quiet";
+    statusEl.textContent = "Buscando un punto mejor sobre la ruta…";
+    programarEntrada();
   } else if (hayAviso && decision === "aceptada") {
+    controles.hidden = false;
     cerrarAviso();
     statusEl.className = "status aviso";
     statusEl.textContent = datos.popup;
   } else if (hayAviso && decision === "rechazada") {
+    controles.hidden = false;
     cerrarAviso();
     statusEl.className = "status quiet";
     statusEl.textContent = "Seguimos en tu pin. El carro va hacia donde estás.";
-  } else {
+  } else if (!hayAviso) {
+    controles.hidden = false;
     cerrarAviso();
     statusEl.className = "status quiet";
     statusEl.textContent = datos.status || "Dentro de este umbral no hay un punto útil sobre la ruta del carro.";
@@ -175,46 +247,50 @@ function aplicar(datos, encuadrar) {
 
   notaEl.textContent = datos.note || "";
 
-  if (encuadrar) {
-    const grupo = L.latLngBounds(limites[0]);
-    limites.slice(1).forEach((marco) => grupo.extend(marco));
-    map.fitBounds(grupo, { paddingTopLeft: [24, 56], paddingBottomRight: [24, 210], maxZoom: 16, animate: false });
+  const puntos = [
+    [datos.user.lat, datos.user.lon],
+    [datos.car.lat, datos.car.lon],
+  ];
+  if (mostrarPunto) {
+    puntos.push([datos.meeting.lat, datos.meeting.lon]);
   }
-  map.invalidateSize();
+  if (reencuadrar !== false) {
+    encuadrar(puntos, !enEntrada);
+  }
 }
 
 umbral.addEventListener("input", () => {
   pintarUmbral();
   if (!usuario || ajustando) return;
-  programar({ encuadrar: false });
+  programar({ encuadrar: true });
 });
 
 aceptarBtn.addEventListener("click", () => {
   if (!ultimo || !ultimo.show_popup) return;
+  limpiarSecuencia();
   decision = "aceptada";
-  aplicar(ultimo, false);
+  aplicar(ultimo, true);
 });
 
 rechazarBtn.addEventListener("click", () => {
   if (!ultimo || !ultimo.show_popup) return;
   const pin = usuario ? { lat: usuario.lat, lon: usuario.lon } : null;
+  limpiarSecuencia();
   decision = "rechazada";
-  aplicar(ultimo, false);
-  if (pin) {
-    usuario = pin;
-  }
+  aplicar(ultimo, true);
+  if (pin) usuario = pin;
 });
 
 avanzarBtn.addEventListener("click", () => {
   if (!usuario || !carro) return;
-  pedir({ avanzar: true, encuadrar: true });
+  pedir({ avanzar: true });
 });
 
 aleatorioBtn.addEventListener("click", () => {
   if (!usuario) return;
   statusEl.className = "status quiet";
   statusEl.textContent = "Buscando un carro sobre una calle, a menos de 2 km…";
-  pedir({ aleatorio: true, encuadrar: true });
+  pedir({ aleatorio: true });
 });
 
 map.on("click", (evento) => {
@@ -223,7 +299,7 @@ map.on("click", (evento) => {
   carro = null;
   statusEl.className = "status quiet";
   statusEl.textContent = "Nuevo pin. Colocando un carro sobre la calle…";
-  pedir({ aleatorio: true, encuadrar: true });
+  pedir({ aleatorio: true });
 });
 
 pintarUmbral();
